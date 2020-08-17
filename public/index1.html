@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <select id="province">
+        <option value="">请选择省</option>
+    </select>省
+    <select id="city">
+        <option value="">请选择市</option>
+    </select>市
+    <select id="county">
+        <option value="">请选择县/区</option>
+    </select>县/区
+    <script src="./js/jquery.min.js"></script>
+    <script>
+        $(function() {
+            let $province = $('#province');
+            let $city = $('#city');
+            let $county = $('#county');
+
+            //把个省显示出来
+            $.get('http://localhost:3000/getAllProvince', (result) => {
+                let {
+                    state,
+                    data
+                } = result;
+                html = ''
+                if (state === 1) {
+                    data.forEach(item => {
+                        html += `<option value="${item.province}">${item.name}</option>`
+                    })
+                    $province.append(html);
+                } else {
+                    alert(result.err)
+                }
+            })
+
+            //省改变时
+            $province.change(function() {
+                $city.html('<option value = "">请选择市</option>')
+                $county.html('<option value = "">请选择市/县</option>')
+                let province = this.value;
+                // alert(province)
+                if (!province) {
+                    return;
+                } else {
+                    $.get('http://localhost:3000/getCitiesByProvince', {
+                        province
+                    }, (result) => {
+                        let {
+                            state,
+                            data
+                        } = result;
+                        html = ''
+                        if (state === 1) {
+                            console.log(data);
+                            data.forEach(item => {
+                                html += `<option value = '${item.city}'>${item.name}</option>`
+                            })
+                            $city.append(html);
+                        } else {
+                            alert(result.err)
+                        }
+                    })
+
+                }
+            })
+
+
+            //市改变时
+            $city.change(function() {
+                $county.html('<option value="">请选择区/县</option>')
+                let province = $province.val()
+                let city = this.value;
+                // console.log(province, city);
+                if (!province || !city) {
+                    return;
+                } else {
+                    $.get('http://localhost:3000/getCountiesByProvinceAndCity', {
+                            province,
+                            city
+                        }, (result) => {
+                            let {
+                                state,
+                                data
+                            } = result;
+                            html = ''
+                            if (state === 1) {
+                                data.forEach(item => {
+                                    html += `<option value="${item.county}">${item.name}</option>`
+                                })
+                                $county.append(html);
+                            } else {
+                                alert(result.err)
+                            }
+                        }
+
+                    )
+                }
+
+            })
+
+        })
+    </script>
+
+</body>
+
+</html>

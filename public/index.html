@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+</head>
+
+<body>
+    <select id="province">        
+        <option value="">请选择省</option>
+    </select>&nbsp;省&nbsp;
+    <select id="city">       
+         <option value="">请选择市</option>
+    </select>&nbsp;市&nbsp;
+    <select id="county">        
+        <option value="">请选择区/县</option>
+    </select>&nbsp;县/区&nbsp;
+    <script src="./js/jquery.min.js"></script>
+
+    <script>
+        $(function() {
+            //用jq获取元素
+            let $province = $('#province');
+            let $city = $('#city');
+            let $county = $('#county');
+
+            $.get('http://localhost:3000/getAllProvince', (result) => {
+                let {
+                    data,
+                    state
+                } = result;
+                let html = '';
+                if (state === 1) {
+                    // console.log(data);
+                    //item是遍历里面每个元素一组一组的
+                    data.forEach(item => {
+                        //让html往里加而不是直接追加因为用html变化是在内存中不断增加
+                        //而直接追加是dom不断增加效率不高
+                        html += ` <option value="${item.province}">${item.name}</option>`
+                    })
+                    $province.append(html)
+                } else {
+                    alert(result.err)
+                }
+            })
+
+            //省发生变化时
+            //此处注意不能用箭头函数 箭头函数this指向window
+            //而我们想让他指向province
+            $province.change(function() {
+                //省份一变清空城市
+                $city.html('<option>请选择市</option>');
+                $county.html('<option>请选择区/县</option>')
+
+
+                let province = this.value;
+                // alert(province);
+                if (!province) {
+                    return
+                } else {
+
+                    $.get('http://localhost:3000/getCitiesByProvince', {
+                        province
+                    }, (result) => {
+                        let {
+                            data,
+                            state
+                        } = result;
+                        let html = '';
+                        if (state === 1) {
+                            // console.log(data);
+                            //item是遍历里面每个元素一组一组的
+                            data.forEach(item => {
+                                //让html往里加而不是直接追加因为用html变化是在内存中不断增加
+                                //而直接追加是dom不断增加效率不高
+                                html += ` <option value="${item.city}">${item.name}</option>`
+                            })
+                            $city.append(html)
+                        } else {
+                            alert(result.err)
+                        }
+                    })
+
+
+
+                }
+            })
+
+            //市发生变化时
+            $city.change(function() {
+                $county.html('<option>请选择区/县</option>')
+                    //val() 方法返回或设置被选元素的值。
+                let province = $province.val()
+                let city = this.value
+                if (!city || !province) {
+                    return
+                }
+
+                //拿到省的选择框值
+
+                console.log(province, city);
+                $.get('http://localhost:3000/getCountiesByProvinceAndCity', {
+                    province,
+                    city
+                }, (result) => {
+                    let {
+                        data,
+                        state
+                    } = result;
+                    let html = '';
+                    if (state === 1) {
+                        // console.log(data);
+                        //item是遍历里面每个元素一组一组的
+                        data.forEach(item => {
+                            //让html往里加而不是直接追加因为用html变化是在内存中不断增加
+                            //而直接追加是dom不断增加效率不高
+                            html += ` <option value="${item.county}">${item.name}</option>`
+                        })
+                        $county.append(html)
+                    } else {
+                        alert(result.err)
+                    }
+                })
+            })
+
+
+
+        })
+    </script>
+
+</body>
+
+</html>
